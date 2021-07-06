@@ -156,7 +156,7 @@ func main() {
 	streamPool := tcpassembly.NewStreamPool(streamFactory)
 	assembler := tcpassembly.NewAssembler(streamPool)
 
-	//findIp()
+	findIp()
 	if len(*output) > 0 {
 		theDispatcher.o, _ = os.Create(*output)
 	}
