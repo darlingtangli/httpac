@@ -17,3 +17,6 @@ httpac
 # vendor/
 go.sum
 go.mod
+
+*.txt
+*.cap

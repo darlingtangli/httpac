@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -56,11 +60,6 @@ func (d *dispatcher) responses(ep endpointPair) chan string {
 }
 
 func (d *dispatcher) onCreate(ep endpointPair, c *connection) {
-	//	for {
-	//		req := <-c.requests
-	//		rsp := <-c.responses
-	//		d.trips <- &trip{ep, req, rsp}
-	//	}
 	for {
 		select {
 		case req := <-c.requests:
@@ -72,14 +71,50 @@ func (d *dispatcher) onCreate(ep endpointPair, c *connection) {
 }
 
 func (d *dispatcher) dump() {
-	for trip := range d.trips {
-		if len(trip.req) > 0 {
-			fmt.Fprintf(d.o, "---------------- REQ: %s -> %s --------------------\n", trip.ep.remote, trip.ep.local)
-			fmt.Fprintf(d.o, "%s\n", trip.req)
+	assembledTrip := make(chan *trip, 100)
+	go func() {
+		for t := range assembledTrip {
+			if !strings.Contains(t.req, "/Ad/Get") {
+				continue
+			}
+			if !strings.Contains(t.req, "\"country\":\"ph") {
+				continue
+			}
+			//if !strings.Contains(t.rsp, "Impression") {
+			//	continue
+			//}
+			//post(t.req, t.rsp)
+			fmt.Fprintf(d.o, "\n\n######### local: %v remote: %v\n", t.ep.local, t.ep.remote)
+			fmt.Fprintf(d.o, t.req)
+			fmt.Fprintf(d.o, t.rsp)
+			//dump2(t)
 		}
-		if len(trip.rsp) > 0 {
-			fmt.Fprintf(d.o, "\n---------------- RSP: %s -> %s --------------------\n", trip.ep.local, trip.ep.remote)
-			fmt.Fprintf(d.o, "%s\n", trip.rsp)
+	}()
+
+	m := make(map[string]string)
+	for t := range d.trips {
+		k := t.ep.remote.String() + t.ep.local.String()
+		if len(t.req) > 0 {
+			// 先来req, 再来rsp
+			m[k] = t.req
+		}
+		if len(t.rsp) > 0 {
+			if len(m[k]) > 0 {
+				assembledTrip <- &trip{t.ep, m[k], t.rsp}
+			}
+			m[k] = ""
 		}
 	}
+}
+
+func post(req, rsp string) {
+	url := "http://202.168.108.109:60005/xx/debug"
+	buf := bytes.NewBuffer(nil)
+	//gw := gzip.NewWriter(buf)
+	gw, _ := gzip.NewWriterLevel(buf, gzip.BestCompression)
+	gw.Write([]byte(req))
+	gw.Write([]byte("\n\n\n"))
+	gw.Write([]byte(rsp))
+	gw.Close()
+	http.Post(url, "", buf)
 }
