@@ -74,13 +74,14 @@ func (h *httpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream
 
 func (h *httpStream) run() {
 	// NOTE: 这里是作为 http server ，进来的是请求，出去的是响应，如果是作为http client，下面的parseRsp 和 parseReq 要反过来
-	if h.net.Src().String() == ip && strings.Contains(*port, h.transport.Src().String()) {
-		//if strings.Contains(*port, h.transport.Src().String()) {
+	//if h.net.Src().String() == ip && strings.Contains(*port, h.transport.Src().String()) {
+	if strings.Contains(*port, h.transport.Src().String()) {
 		ep := endpointPair{
 			local:  endpoint{h.net.Src().String(), h.transport.Src().String()},
 			remote: endpoint{h.net.Dst().String(), h.transport.Dst().String()},
 		}
 		n := parseRsp(&h.r, theDispatcher.responses(ep))
+		//n := parseReq(&h.r, theDispatcher.requests(ep))
 		log.Printf("capture %d http responses from  %s to %s\n", n, ep.remote, ep.local)
 	} else {
 		ep := endpointPair{
@@ -88,6 +89,7 @@ func (h *httpStream) run() {
 			remote: endpoint{h.net.Src().String(), h.transport.Src().String()},
 		}
 		n := parseReq(&h.r, theDispatcher.requests(ep))
+		//n := parseRsp(&h.r, theDispatcher.responses(ep))
 		log.Printf("capture %d http requests from  %s to %s\n", n, ep.local, ep.remote)
 	}
 }
@@ -118,8 +120,8 @@ func main() {
 		return
 	}
 
-	//filter := "tcp and host 34.96.111.110 and ("
-	filter := "tcp and ("
+	filter := "tcp and host 161.117.112.46 and ("
+	//filter := "tcp and ("
 	ports := strings.Split(*port, ",")
 	first := true
 	for _, p := range ports {

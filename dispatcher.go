@@ -72,7 +72,7 @@ func (d *dispatcher) dump() {
 		for t := range assembledTrip {
 			//fmt.Fprintf(d.o, "\n\n######### local: %v remote: %v\n", t.ep.local, t.ep.remote)
 			//fmt.Fprintf(d.o, t.req)
-			//fmt.Fprintf(d.o, t.rsp)
+			//fmt.Fprintf(d.o, "\n\n%s", t.rsp)
 			dump2(t)
 		}
 	}()

@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
+	//"bufio"
+	//"bytes"
+	//"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
+	//"io"
+	//"io/ioutil"
+	//"net/http"
 	"os"
 	"strings"
 )
@@ -128,77 +128,85 @@ type NativeResponseStr struct {
 }
 
 func dump2(t *trip) {
-	buf := bufio.NewReader(bytes.NewBufferString(t.req))
-	req, _ := http.ReadRequest(buf)
-	defer req.Body.Close()
-	if !strings.Contains(req.URL.Path, "GetAdOut") || req.URL.Query().Get("sspid") != "1101" {
+	o := file("flatads_likee.txt")
+	if !strings.Contains(t.req, "Likee") {
 		return
 	}
-	b, _ := ioutil.ReadAll(req.Body)
-	bidReq := BidRequest{}
-	json.Unmarshal(b, &bidReq)
-	if len(bidReq.Imps) == 0 {
-		fmt.Printf("bidReq.Imps empty: %s\n", b)
-		return
-	}
+	//buf := bufio.NewReader(bytes.NewBufferString(t.req))
+	//req, _ := http.ReadRequest(buf)
+	//defer req.Body.Close()
+	//if !strings.Contains(req.URL.Path, "GetAdOut") || req.URL.Query().Get("sspid") != "1101" {
+	//	return
+	//}
+	//b, _ := ioutil.ReadAll(req.Body)
+	//bidReq := BidRequest{}
+	//json.Unmarshal(b, &bidReq)
+	//if len(bidReq.Imps) == 0 {
+	//	fmt.Printf("bidReq.Imps empty: %s\n", b)
+	//	return
+	//}
 
-	buf = bufio.NewReader(bytes.NewBufferString(t.rsp))
-	rsp, _ := http.ReadResponse(buf, nil)
-	defer rsp.Body.Close()
-	b, _ = ioutil.ReadAll(rsp.Body)
-	bidRsp := BidResponse{}
-	json.Unmarshal(b, &bidRsp)
-	if bidRsp.Code != 0 {
-		return
-	}
-	if len(bidRsp.Seatbids) == 0 {
-		fmt.Printf("bidRsp.Seatbids empty: %s\n", b)
-		return
-	}
-	if len(bidRsp.Seatbids[0].Bids) == 0 {
-		fmt.Printf("bidRsp.Seatbids[0].Bids empty: %s\n", b)
-		return
-	}
-	bid := bidRsp.Seatbids[0].Bids[0]
-	if len(bid.Adm) == 0 {
-		fmt.Printf("bidRsp.Seatbids[0].Bids empty: %s\n", b)
-		return
-	}
+	//buf := bufio.NewReader(bytes.NewBufferString(t.rsp))
+	//rsp, _ := http.ReadResponse(buf, nil)
+	//defer rsp.Body.Close()
+	//if rsp.StatusCode != 200 {
+	//	return
+	//}
+	////o := file("rtbhouse.txt")
+	//b, _ := ioutil.ReadAll(rsp.Body)
+	//bidRsp := BidResponse{}
+	//json.Unmarshal(b, &bidRsp)
+	//if bidRsp.Code != 0 {
+	//	return
+	//}
+	//if len(bidRsp.Seatbids) == 0 {
+	//	fmt.Printf("bidRsp.Seatbids empty: %s\n", b)
+	//	return
+	//}
+	//if len(bidRsp.Seatbids[0].Bids) == 0 {
+	//	fmt.Printf("bidRsp.Seatbids[0].Bids empty: %s\n", b)
+	//	return
+	//}
+	//bid := bidRsp.Seatbids[0].Bids[0]
+	//if len(bid.Adm) == 0 {
+	//	fmt.Printf("bidRsp.Seatbids[0].Bids empty: %s\n", b)
+	//	return
+	//}
 
-	var o io.Writer
-	if strings.HasPrefix(bid.Adm, "{") {
-		var nativeRsp *NativeResponse
-		if strings.Contains(bid.Adm, `{"native"`) {
-			nativeRspTmp := &NativeResponseStr{}
-			json.Unmarshal([]byte(bid.Adm), nativeRspTmp)
-			nativeRsp = nativeRspTmp.Native
-		} else {
-			nativeRspTmp := &NativeResponse{}
-			json.Unmarshal([]byte(bid.Adm), nativeRspTmp)
-			nativeRsp = nativeRspTmp
-		}
-		name := "native_v" + nativeRsp.Ver
-		video := false
-		for _, a := range nativeRsp.Assets {
-			if a.Video != nil {
-				video = true
-				break
-			}
-		}
+	//var o io.Writer
+	//if strings.HasPrefix(bid.Adm, "{") {
+	//	var nativeRsp *NativeResponse
+	//	//if strings.Contains(bid.Adm, `{"native"`) {
+	//	//	nativeRspTmp := &NativeResponseStr{}
+	//	//	json.Unmarshal([]byte(bid.Adm), nativeRspTmp)
+	//	//	nativeRsp = nativeRspTmp.Native
+	//	//} else {
+	//	nativeRspTmp := &NativeResponse{}
+	//	json.Unmarshal([]byte(bid.Adm), nativeRspTmp)
+	//	nativeRsp = nativeRspTmp
+	//	//}
+	//	name := "native_v" + nativeRsp.Ver
+	//	video := false
+	//	for _, a := range nativeRsp.Assets {
+	//		if a.Video != nil {
+	//			video = true
+	//			break
+	//		}
+	//	}
 
-		if video {
-			o = file(name + "_video.txt")
-		} else {
-			o = file(name + ".txt")
-		}
-	} else if strings.HasPrefix(bid.Adm, "<!DOCTYPE html") {
-		o = file("banner.txt")
-	} else {
-		o = file("video.txt")
-	}
+	//	if video {
+	//		o = file(name + "_video.txt")
+	//	} else {
+	//		o = file(name + ".txt")
+	//	}
+	//} else if strings.HasPrefix(bid.Adm, "<if") {
+	//	o = file("banner.txt")
+	//} else {
+	//	o = file("video.txt")
+	//}
 
-	fmt.Fprintf(o, "\n\n######### local: %v remote: %v\n", t.ep.local, t.ep.remote)
+	fmt.Fprintf(o, "\n\n################## local: %v remote: %v\n", t.ep.local, t.ep.remote)
 	fmt.Fprintf(o, t.req)
-	fmt.Fprintf(o, "\n### RSP\n%s", t.rsp)
+	fmt.Fprintf(o, "\n\n########## RSP\n%s", t.rsp)
 
 }
