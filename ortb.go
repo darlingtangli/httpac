@@ -3,13 +3,13 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
+	"compress/gzip"
+	//"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
+	//"strings"
 )
 
 type ImpExt struct {
@@ -134,34 +134,48 @@ type NativeResponseStr struct {
 }
 
 func dump2(t *trip) {
+	var o io.Writer
+	var b []byte
 	buf := bufio.NewReader(bytes.NewBufferString(t.req))
 	req, _ := http.ReadRequest(buf)
 	defer req.Body.Close()
-	if !strings.Contains(req.URL.Path, "GetAdOut") || req.URL.Query().Get("sspid") != "1105" {
-		return
-	}
-	b, _ := ioutil.ReadAll(req.Body)
-	bidReq := BidRequest{}
-	json.Unmarshal(b, &bidReq)
-	if len(bidReq.Imps) == 0 {
-		fmt.Printf("bidReq.Imps empty: %s\n", b)
-		return
-	}
-
-	var o io.Writer
-	imp := bidReq.Imps[0]
-	if imp.Video != nil {
-		o = file("video.txt")
-	} else if imp.Banner != nil {
-		o = file("banner.txt")
+	if req.Header.Get("Content-Encoding") == "gzip" {
+		gr, err := gzip.NewReader(req.Body)
+		if err != nil {
+			println("####", err.Error())
+		}
+		if gr != nil {
+			b, _ = io.ReadAll(gr)
+		}
 	} else {
-		o = file("native.txt")
+		b, _ = io.ReadAll(req.Body)
 	}
+	o = file(req.URL.Query().Get("sspid") + ".txt")
+	fmt.Fprintf(o, "%s\n", b)
+	////if !strings.Contains(req.URL.Path, "GetAdOut") || req.URL.Query().Get("sspid") != "1105" {
+	////	return
+	////}
+	//b, _ = ioutil.ReadAll(req.Body)
+	//bidReq := BidRequest{}
+	//json.Unmarshal(b, &bidReq)
+	//if len(bidReq.Imps) == 0 {
+	//	fmt.Printf("bidReq.Imps empty: %s\n", b)
+	//	return
+	//}
+
+	//imp := bidReq.Imps[0]
+	//if imp.Video != nil {
+	//	o = file("video.txt")
+	//} else if imp.Banner != nil {
+	//	o = file("banner.txt")
+	//} else {
+	//	o = file("native.txt")
+	//}
 
 	//buf = bufio.NewReader(bytes.NewBufferString(t.rsp))
 	//rsp, _ := http.ReadResponse(buf, nil)
 	//defer rsp.Body.Close()
-	//b, _ = ioutil.ReadAll(rsp.Body)
+	//b, _ = io.ReadAll(rsp.Body)
 	//bidRsp := BidResponse{}
 	//json.Unmarshal(b, &bidRsp)
 	//if bidRsp.Code != 0 {
@@ -213,8 +227,8 @@ func dump2(t *trip) {
 	//	o = file("video.txt")
 	//}
 
-	fmt.Fprintf(o, "\n\n######### local: %v remote: %v\n", t.ep.local, t.ep.remote)
-	fmt.Fprintf(o, t.req)
-	fmt.Fprintf(o, "\n### RSP\n%s", t.rsp)
+	//fmt.Fprintf(o, "\n\n######### local: %v remote: %v\n", t.ep.local, t.ep.remote)
+	//fmt.Fprintf(o, "%s %s %s\n", imp.Native.Request, b, req.URL.RawQuery)
+	//fmt.Fprintf(o, "\n### RSP\n%s", t.rsp)
 
 }

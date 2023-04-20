@@ -77,10 +77,10 @@ func (d *dispatcher) dump() {
 			if !strings.Contains(t.req, "/Ad/Get") {
 				continue
 			}
-			if !strings.Contains(t.req, "\"country\":\"ph") {
+			if !strings.Contains(t.rsp, "OK") {
 				continue
 			}
-			//if !strings.Contains(t.rsp, "Impression") {
+			//if !strings.Contains(t.req, "sspid=1162") {
 			//	continue
 			//}
 			//post(t.req, t.rsp)
